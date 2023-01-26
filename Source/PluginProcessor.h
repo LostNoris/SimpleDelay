@@ -57,6 +57,9 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    //==============================================================================
+    //============================================================================== 
+    int delayBufferPos = 0;
+    juce::AudioBuffer<float> delayBuffer;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleDelayAudioProcessor)
 };
