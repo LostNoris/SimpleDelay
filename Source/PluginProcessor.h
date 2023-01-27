@@ -58,6 +58,7 @@ public:
 
 private:
     //============================================================================== 
+    juce::AudioProcessorValueTreeState state;
     int delayBufferPos = 0;
     juce::AudioBuffer<float> delayBuffer;
     

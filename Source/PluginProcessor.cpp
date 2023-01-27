@@ -21,12 +21,16 @@ SimpleDelayAudioProcessor::SimpleDelayAudioProcessor()
                      #endif
                        )
 #endif
-{
-    addParameter(new juce::AudioParameterFloat("gain", "Gain", 0.0f, 1.0f, 0.5f));
-    addParameter(new juce::AudioParameterFloat("feedback", "Feedback", 0.0f, 1.0f, 0.35f));
-    addParameter(new juce::AudioParameterFloat("mix", "Mix", 0.0f, 1.0f, 0.5f));
-    addParameter(new juce::AudioParameterInt("time", "Time", 100, 1000, 500));
-}
+
+   , state (*this, nullptr, "STATE", {
+
+        std::make_unique<juce::AudioParameterFloat> ("gain", "Gain", 0.0f, 1.0f, 0.5f),
+        std::make_unique<juce::AudioParameterFloat> ("feedback", "Feedback", 0.0f, 1.0f, 0.35f),
+        std::make_unique<juce::AudioParameterFloat> ("mix", "Mix", 0.0f, 1.0f, 0.5f),
+        std::make_unique<juce::AudioParameterFloat> ("time", "Time", 0.1f, 5.f, 1.0f),
+    })
+    {
+    }
 
 SimpleDelayAudioProcessor::~SimpleDelayAudioProcessor()
 {
@@ -100,8 +104,8 @@ void SimpleDelayAudioProcessor::prepareToPlay (double sampleRate, int /**samples
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
-    int delayMilliseconds = 1000;
-    auto delaySamples = (int) std::round (sampleRate * (delayMilliseconds / 1000.0));
+    int delayMilliseconds = 10000;
+    auto delaySamples = (int) std::round (sampleRate * delayMilliseconds) / 1000.0;
     delayBuffer.setSize (2, delaySamples);
     delayBuffer.clear();
     delayBufferPos = 0;
@@ -161,10 +165,10 @@ void SimpleDelayAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
 
-   auto& parameters  = getParameters();
-    float gain     = parameters[0]->getValue();
-    float feedback = parameters[1]->getValue();
-    float mix      = parameters[2]->getValue();
+    float gain     = state.getParameter("gain")->getValue();
+    float feedback = state.getParameter("feedback")->getValue();
+    float mix      = state.getParameter("mix")->getValue();
+    float time     = state.getParameter("time")->getValue();
 
    int delayBufferSize = delayBuffer.getNumSamples();
 
@@ -212,12 +216,20 @@ void SimpleDelayAudioProcessor::getStateInformation (juce::MemoryBlock& destData
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+
+    if (auto xmlState = state.copyState().createXml())
+        copyXmlToBinary(*xmlState, destData);
+
 }
 
 void SimpleDelayAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+
+    if (auto xmlState = getXmlFromBinary(data, sizeInBytes))
+        state.replaceState (juce::ValueTree::fromXml (*xmlState));
+
 }
 
 //==============================================================================
