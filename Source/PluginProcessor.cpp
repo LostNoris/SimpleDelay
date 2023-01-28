@@ -206,8 +206,8 @@ bool SimpleDelayAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* SimpleDelayAudioProcessor::createEditor()
 {
-    //return new SimpleDelayAudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor (*this);
+   return new SimpleDelayAudioProcessorEditor (*this);
+   // return new juce::GenericAudioProcessorEditor (*this);
 }
 
 //==============================================================================
